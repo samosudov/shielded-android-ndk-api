@@ -3,7 +3,8 @@ package work.samosudov.rustlib
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Before
 import org.junit.Test
-import work.samosudov.rustlib.crypto.Utils.hexToBytes
+import work.samosudov.rustlib.crypto.TypeConvert.bytesToLong
+import work.samosudov.rustlib.crypto.Utils.*
 import java.util.*
 
 class RustAPITest {
@@ -64,6 +65,28 @@ class RustAPITest {
 
         println("res=${Arrays.toString(res)}")
         assert(res.contentEquals(expected))
+    }
+
+    @Test
+    fun testComputeNf() {
+        val ak = "3995b253b7741573de048d032d10df145712b4ea61b7e14b45898c92110ba95e"
+        val nk = "a3e49eb2c28afda36a9acb8d8abff3d1f78708b464c71b91893b4a008f56db5b"
+        val d =  byteArrayOf(-86, 3, -15, 91, -14, 88, 9, -68, -104, -71, 63)
+        val pkd = byteArrayOf(-34, -94, 81, 0, 81, 24, -26, 2, -107, -127, 29, 0, -54, 108, -78, 62, 123, -32, 59, 41, -55, -10, 98, 17, 15, -65, 21, 59, 44, -94, 52, -42)
+        val vbytes = byteArrayOf(0, 0, 0, 0, 5, -11, -31, 0)
+        val rbytes = byteArrayOf(-67, 48, 39, -22, -34, 65, -92, 123, -109, 12, -112, -1, -124, 54, 60, -76, -5, 92, -33, -50, 90, -69, -128, 72, -108, 94, -71, -98, -59, 110, 104, -127)
+        val position = 103677
+        val resString = RustAPI.computeNf(
+            bytesToHex(d),
+            bytesToHex(reverseByteArray(pkd)),
+            bytesToLong(vbytes).toString(),
+            bytesToHex(rbytes),
+            ak,
+            nk,
+            position.toString()
+        )
+        println("res1 = $resString")
+
     }
 
 }
