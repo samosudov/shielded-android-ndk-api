@@ -54,7 +54,7 @@ impl SaplingProvingContext {
             PublicKey<Bls12>,
             Vec<u8>,
         ),
-        (),
+        String,
     > {
         // Initialize secure RNG
         let mut rng = OsRng::new().expect("should be able to construct RNG");
@@ -83,7 +83,7 @@ impl SaplingProvingContext {
         // Construct the payment address with the viewing key / diversifier
         let payment_address = match viewing_key.into_payment_address(diversifier, params) {
             Some(p) => p,
-            None => return Err(()),
+            None => return Err("RustLibrarySpendProofErrorCode07".to_string()),
         };
 
         // This is the result of the re-randomization, we compute it for the caller
@@ -93,12 +93,15 @@ impl SaplingProvingContext {
             params,
         );
 
+        let dvf_gd = match diversifier.g_d::<Bls12>(params) {
+            Some(p) => p,
+            None => return Err("RustLibrarySpendProofErrorCode08".to_string()),
+        };
+
         // Let's compute the nullifier while we have the position
         let note = Note {
             value: value,
-            g_d: diversifier
-                .g_d::<Bls12>(params)
-                .expect("was a valid diversifier before"),
+            g_d: dvf_gd,
             pk_d: payment_address.pk_d.clone(),
             r: rcm,
         };
@@ -156,7 +159,7 @@ impl SaplingProvingContext {
 
              //Any other case
             _ => {
-                return Err(());
+                return Err("RustLibrarySpendProofErrorCode09".to_string());
             }
         }
 

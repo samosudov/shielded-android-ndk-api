@@ -32,7 +32,7 @@ pub trait TxProver {
             edwards::Point<Bls12, Unknown>,
             PublicKey<Bls12>,
         ),
-        (),
+        String,
     >;
 
     /// Create the value commitment and proof for a Sapling OutputDescription,
@@ -83,7 +83,7 @@ impl TxProver for LocalTxProver {
             edwards::Point<Bls12, Unknown>,
             PublicKey<Bls12>,
         ),
-        (),
+        String,
     > {
         let (proof, cv, rk, nf) = ctx.spend_proof(
             proof_generation_key,
@@ -168,7 +168,7 @@ pub(crate) mod mock {
                 edwards::Point<Bls12, Unknown>,
                 PublicKey<Bls12>,
             ),
-            (),
+            String,
         > {
             let mut rng = OsRng::new().expect("should be able to construct RNG");
 

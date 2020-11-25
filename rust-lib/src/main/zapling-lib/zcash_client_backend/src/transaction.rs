@@ -299,7 +299,7 @@ impl Builder {
                     anchor,
                     spend.witness.clone(),
                 )
-                .map_err(|()| Error(ErrorKind::SpendProof))?;
+                .map_err(|s| Error(ErrorKind::SpendProof))?;
 
             self.mtx.shielded_spends.push(SpendDescription {
                 cv,

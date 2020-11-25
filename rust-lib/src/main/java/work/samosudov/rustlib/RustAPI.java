@@ -135,7 +135,10 @@ public class RustAPI {
         String oPath = "sapling-output.params";
         String sPath = "sapling-spend.params";
         String instr = initModel(context.getAssets(), oPath, sPath);
-        if (instr.contains("nullptr")) Log.e("rust-independent","checkInit=initialization error");
+
+        if (instr.contains("nullptr"))
+            Log.e("rust-independent","checkInit=initialization error");
+
         Log.d(RUST_INDEPENDENT_TAG,"checkInit=" + instr);
         Log.d(RUST_INDEPENDENT_TAG, "checkInit done");
 

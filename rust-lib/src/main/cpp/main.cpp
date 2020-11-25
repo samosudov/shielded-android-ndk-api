@@ -43,7 +43,7 @@ Java_work_samosudov_rustlib_RustAPI_initModel(
     AAsset *assetSp = AAssetManager_open(assetManager, spendName, AASSET_MODE_BUFFER);
 
     if(assetOut == nullptr || assetSp == nullptr) {
-        __android_log_print(ANDROID_LOG_DEBUG, "LOG_TAG", "Failed to open the asset. out or spend params");
+        __android_log_print(ANDROID_LOG_DEBUG, "Rust-Api-Lib", "Failed to open the asset. out or spend params");
         std::string hello = "assetOut == nullptr || assetSp == nullptr";
         return env->NewStringUTF(hello.c_str());
     }
@@ -438,7 +438,7 @@ Java_work_samosudov_rustlib_RustAPI_checkout(
     unsigned char* resZk = new unsigned char[bytesZk.size()];
     std::copy(bytesZk.begin(), bytesZk.end(), resZk);
 
-    __android_log_print(ANDROID_LOG_DEBUG, "LOG_TAG", "cpstrZk=[%02x]...[%02x] size=[%lu]", resZk[0], resZk[bytesZk.size()], bytesZk.size());
+    __android_log_print(ANDROID_LOG_DEBUG, "Rust-Api-Lib", "cpstrZk=[%02x]...[%02x] size=[%lu]", resZk[0], resZk[bytesZk.size()], bytesZk.size());
 
     uint256 cvunt = uint256S(cpstrCv);
 
@@ -678,9 +678,13 @@ Java_work_samosudov_rustlib_RustAPI_spendProof(
             rk.begin(),
             zkproof.begin(),
             nf.begin())) {
-        __android_log_print(ANDROID_LOG_DEBUG, "LOG_TAG", "librustzcash_sapling_spend_proof false");
+        __android_log_print(ANDROID_LOG_DEBUG, "Rust-Api-Lib", "librustzcash_sapling_spend_proof false");
         librustzcash_sapling_proving_ctx_free(ctx);
-        return env->NewByteArray(4);
+        unsigned char* nfArr = new unsigned char[32];
+        std::copy(nf.begin(), nf.end(), nfArr);
+        jbyteArray array = env->NewByteArray(32);
+        env->SetByteArrayRegion (array, 0, 32, reinterpret_cast<jbyte*>(nfArr));
+        return array;
     };
 
 

@@ -721,22 +721,34 @@ pub extern "system" fn librustzcash_sapling_spend_proof(
     zkproof: *mut [c_uchar; GROTH_PROOF_SIZE],
     nf: *mut [c_uchar; 32],
 ) -> bool {
+    let error_result_code = unsafe { &mut *nf };
+
+
     // Grab `ak` from the caller, which should be a point.
     let ak = match edwards::Point::<Bls12, Unknown>::read(&(unsafe { &*ak })[..], &JUBJUB) {
         Ok(p) => p,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode00");
+            return false
+        },
     };
 
     // `ak` should be prime order.
     let ak = match ak.as_prime_order(&JUBJUB) {
         Some(p) => p,
-        None => return false,
+        None => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode01");
+            return false
+        },
     };
 
     // Grab `nsk` from the caller
     let nsk = match Fs::from_repr(read_fs(&(unsafe { &*nsk })[..])) {
         Ok(p) => p,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode02");
+            return false
+        },
     };
 
     // Construct the proof generation key
@@ -747,35 +759,47 @@ pub extern "system" fn librustzcash_sapling_spend_proof(
 
     // Grab the diversifier from the caller
     let diversifier = sapling_crypto::primitives::Diversifier(unsafe { *diversifier });
+    // let diversifier = Diversifier([0u8; 11]);
 
     // The caller chooses the note randomness
     let rcm = match Fs::from_repr(read_fs(&(unsafe { &*rcm })[..])) {
         Ok(p) => p,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode03");
+            return false
+        },
     };
 
     // The caller also chooses the re-randomization of ak
     let ar = match Fs::from_repr(read_fs(&(unsafe { &*ar })[..])) {
         Ok(p) => p,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode04");
+            return false
+        },
     };
 
     // We need to compute the anchor of the Spend.
     let anchor = match Fr::from_repr(read_le(unsafe { &(&*anchor)[..] })) {
         Ok(p) => p,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode05");
+            return false
+        },
     };
 
     // The witness contains the incremental tree witness information, in a
     // weird serialized format.
     let witness = match CommitmentTreeWitness::from_slice(unsafe { &(&*witness)[..] }) {
         Ok(w) => w,
-        Err(_) => return false,
+        Err(_) => {
+            error_result_code.copy_from_slice(b"RustLibrarySpendProofErrorCode06");
+            return false
+        },
     };
 
     // Create proof
-    let (proof, value_commitment, rk, nullifier) = unsafe { &mut *ctx }
-        .spend_proof(
+    let (proof, value_commitment, rk, nullifier) = match unsafe { &mut *ctx }.spend_proof(
             proof_generation_key,
             diversifier,
             rcm,
@@ -785,9 +809,15 @@ pub extern "system" fn librustzcash_sapling_spend_proof(
             witness,
             unsafe { SAPLING_SPEND_PARAMS.as_ref() }.unwrap(),
             unsafe { SAPLING_SPEND_VK.as_ref() }.unwrap(),
-            &JUBJUB,
-        )
-        .expect("proving should not fail");
+            &JUBJUB) {
+        Ok(proof)  => (proof),
+        Err(e) => {
+            let bytes = e.as_bytes();
+            error_result_code.copy_from_slice(bytes);
+            return false
+        },
+    };
+        // .expect("proving should not fail");
 
     // Write value commitment to caller
     value_commitment
